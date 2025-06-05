@@ -16,23 +16,18 @@ class World:
 
     def spawn_trash(self):
         self.trash_list = []
-        for _ in range(5):  # spawn exactly 5 trash items
+        num_trash = 7  # Number of trash items to spawn
+
+        for _ in range(num_trash):
             while True:
-                radius = random.uniform(0, self.safezone_radius)
-                angle = random.uniform(0, 2 * math.pi)
-                x = self.npc_pos[0] + radius * math.cos(angle)
-                y = self.npc_pos[1] + radius * math.sin(angle)
-                
-                # Clamp position within map boundaries
-                x = max(0, min(x, self.map_width - self.trash_image.get_width()))
-                y = max(0, min(y, self.map_height - self.trash_image.get_height()))
-                
-                # Check if still inside safe zone after clamping
+                x = random.uniform(0, self.map_width - self.trash_image.get_width())
+                y = random.uniform(0, self.map_height - self.trash_image.get_height())
+
                 dist_to_npc = math.hypot(x - self.npc_pos[0], y - self.npc_pos[1])
-                if dist_to_npc <= self.safezone_radius:
+
+                if dist_to_npc > self.safezone_radius:
+                    self.trash_list.append(Trash(self.trash_image, (x, y), (self.map_width, self.map_height)))
                     break
-            
-            self.trash_list.append(Trash(self.trash_image, (x, y), (self.map_width, self.map_height)))
 
     def draw_landfill(self, screen, camera_offset):
         pos = (self.decomposer_zone.x - camera_offset.x, self.decomposer_zone.y - camera_offset.y)
