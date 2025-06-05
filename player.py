@@ -6,23 +6,32 @@ class Player:
         self.speed = speed
         self.images = images
         self.image = images["default"]
-        self.rect = pygame.Rect(0, 0, 48, 48)
+        self.rect = self.image.get_rect(topleft=self.pos)
         self.carrying_trash = False
+        self.trash_inventory = []  # can carry up to 5 trash items
 
     def move(self):
         keys = pygame.key.get_pressed()
-        if keys[pygame.K_d]:
-            self.pos.x += self.speed
-            self.image = self.images["right"]
-        elif keys[pygame.K_a]:
-            self.pos.x -= self.speed
+        velocity = pygame.Vector2(0, 0)
+        if keys[pygame.K_LEFT] or keys[pygame.K_a]:
+            velocity.x = -self.speed
             self.image = self.images["left"]
-        elif keys[pygame.K_s]:
-            self.pos.y += self.speed
+        elif keys[pygame.K_RIGHT] or keys[pygame.K_d]:
+            velocity.x = self.speed
+            self.image = self.images["right"]
+        if keys[pygame.K_UP] or keys[pygame.K_w]:
+            velocity.y = -self.speed
+            self.image = self.images["up"] if "up" in self.images else self.image
+        elif keys[pygame.K_DOWN] or keys[pygame.K_s]:
+            velocity.y = self.speed
             self.image = self.images["down"]
-        elif keys[pygame.K_w]:
-            self.pos.y -= self.speed
-            self.image = self.images["default"]
+
+        self.pos += velocity
+        self.rect.topleft = self.pos
 
     def get_world_rect(self):
-        return pygame.Rect(self.pos.x, self.pos.y, 48, 48)
+        return pygame.Rect(self.pos.x, self.pos.y, self.rect.width, self.rect.height)
+
+    def pick_trash(self, trash):
+        if len(self.trash_inventory) < 5:
+            self.trash_inventory.append(trash)

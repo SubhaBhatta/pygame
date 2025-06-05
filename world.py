@@ -1,20 +1,43 @@
 import pygame
 import random
+import math
+from trash import Trash
 
 class World:
-    def __init__(self, map_size, trash_img, landfill_img):
+    def __init__(self, map_size, trash_image, landfill_image, npc_pos, safezone_radius):
         self.map_width, self.map_height = map_size
-        self.trash_img = trash_img
-        self.landfill_img = landfill_img
-        self.trash_list = [trash_img.get_rect(topleft=(
-            random.randint(100, self.map_width - 100),
-            random.randint(100, self.map_height - 100)
-        )) for _ in range(5)]
-        self.decomposer_zone = landfill_img.get_rect(topleft=(1600, 1600))
+        self.trash_image = trash_image
+        self.landfill_image = landfill_image
+        self.npc_pos = npc_pos
+        self.safezone_radius = safezone_radius
+        self.decomposer_zone = pygame.Rect(self.npc_pos[0] - 75, self.npc_pos[1] - 75, 150, 150)
+        self.trash_list = []
+        self.spawn_trash()
 
-    def draw_trash(self, screen, offset):
-        for rect in self.trash_list:
-            screen.blit(self.trash_img, rect.topleft - offset)
+    def spawn_trash(self):
+        self.trash_list = []
+        for _ in range(5):  # spawn exactly 5 trash items
+            while True:
+                radius = random.uniform(0, self.safezone_radius)
+                angle = random.uniform(0, 2 * math.pi)
+                x = self.npc_pos[0] + radius * math.cos(angle)
+                y = self.npc_pos[1] + radius * math.sin(angle)
+                
+                # Clamp position within map boundaries
+                x = max(0, min(x, self.map_width - self.trash_image.get_width()))
+                y = max(0, min(y, self.map_height - self.trash_image.get_height()))
+                
+                # Check if still inside safe zone after clamping
+                dist_to_npc = math.hypot(x - self.npc_pos[0], y - self.npc_pos[1])
+                if dist_to_npc <= self.safezone_radius:
+                    break
+            
+            self.trash_list.append(Trash(self.trash_image, (x, y), (self.map_width, self.map_height)))
 
-    def draw_landfill(self, screen, offset):
-        screen.blit(self.landfill_img, self.decomposer_zone.topleft - offset)
+    def draw_landfill(self, screen, camera_offset):
+        pos = (self.decomposer_zone.x - camera_offset.x, self.decomposer_zone.y - camera_offset.y)
+        screen.blit(self.landfill_image, pos)
+
+    def draw_trash(self, screen, camera_offset):
+        for trash in self.trash_list:
+            trash.draw(screen, camera_offset)
