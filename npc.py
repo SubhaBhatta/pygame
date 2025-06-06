@@ -8,12 +8,26 @@ class NPC:
         self.safezone_radius = safezone_radius
         self.chat_radius = chat_radius
         self.achievement_shown = False
+        self.second_quest_given = False
+        self.second_quest_complete = False
 
     def is_in_safezone(self, player_pos):
         return self.pos.distance_to(player_pos) <= self.safezone_radius
 
     def is_in_chat_radius(self, player_pos):
         return self.pos.distance_to(player_pos) <= self.chat_radius
+
+    def get_message(self, game_state):
+        if not game_state['mission_complete']:
+            return "BALEN: Please collect 5 trash items!"
+        elif game_state['mission_complete'] and not self.second_quest_given:
+            self.second_quest_given = True
+            return "BALEN: Now defeat 20 enemies with your sword!"
+        elif self.second_quest_given and not game_state['second_mission_complete']:
+            return f"BALEN: Enemies defeated: {game_state['enemies_killed']}/20"
+        elif game_state['second_mission_complete']:
+            return "BALEN: You've proven yourself worthy!"
+        return None
 
     def draw(self, surface, camera_offset):
         pos = self.pos - camera_offset
